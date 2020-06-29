@@ -3,7 +3,7 @@
 #include"controller.h"
 using namespace std;
 
-void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path> &tmp_route, list<Path> &old_route, double &mindanger, double &sumdanger, vector<double> &increment, int arrivetime,int go_day,vector<int> &go_inc) {//最少风险策略
+void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path> &tmp_route, list<Path> &old_route, double &mindanger, double &sumdanger, vector<double> &increment, int arrivetime) {//最少风险策略
 	auto begin_passcity = passcity.begin(), end_passcity = passcity.end();//passcity的迭代器
 	Path tmp_path;//暂时存储路线
 	if (sumdanger > mindanger) {//如果风险已经超出最小的，舍去
@@ -11,8 +11,6 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 		tmp_route.pop_back();
 		sumdanger -= increment.back();//把删除路径的的风险删去
 		increment.pop_back();
-		go_day -= go_inc.back();
-		go_inc.pop_back();
 		return;
 	}
 	while (begin_passcity != end_passcity) {
@@ -21,8 +19,6 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 			tmp_route.pop_back();
 			sumdanger -= increment.back();
 			increment.pop_back();
-			go_day -= go_inc.back();
-			go_inc.pop_back();
 			return;
 		}
 		begin_passcity++;
@@ -30,8 +26,6 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 	if (start == pass.destination) {//到达终点，且风险比旧的最小风险低
 		tmp_path.location = start;
 		tmp_path.s_time = -1;//已经到达终点change_state函数不再改变状态
-		tmp_path.arriveday = go_day;
-		tmp_path.arrivetime = arrivetime;
 		tmp_route.push_back(tmp_path);
 		old_route = tmp_route;
 		if(sumdanger==mindanger)//如果新的路径风险于旧的相同，就添加
@@ -46,8 +40,6 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 		tmp_route.pop_back();
 		sumdanger -= increment.back();
 		increment.pop_back();
-		go_day -= go_inc.back();
-		go_inc.pop_back();
 		return;
 	}
 	else {
@@ -86,24 +78,17 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 				sumdanger += (*begin_enable).danger*(*begin_enable).t_time*city[i].danger + (((*begin_enable).s_time + 24) - arrivetime)*city[i].danger;
 				increment.push_back((*begin_enable).danger*(*begin_enable).t_time*city[i].danger + (((*begin_enable).s_time + 24) - arrivetime)*city[i].danger);
 			}
-			int usehour = 0;//用于计算花了多少天
 			tmp_path.location = (*begin_enable).start;//路径点的输入,当前城市
 			tmp_path.s_time = ((*begin_enable).s_time >= arrivetime) ? ((*begin_enable).s_time - arrivetime) : (((*begin_enable).s_time + 24) - arrivetime);//在该城市的等待时间
-			tmp_path.arrivetime = arrivetime;
-			tmp_path.arriveday = go_day;
 			tmp_path.kind = "城市";
-			usehour += tmp_path.s_time;
 			tmp_route.push_back(tmp_path);//把路径点加入到暂时路径中
 
 			tmp_path.location = (*begin_enable).v_name;//即将乘坐的班次
 			tmp_path.s_time = (*begin_enable).t_time;//在路上的时间
 			tmp_path.kind = (*begin_enable).kind;//交通工具的种类
-			usehour += tmp_path.s_time;
 			tmp_route.push_back(tmp_path);
 			
-			go_day += (arrivetime + usehour) / 24;
-			go_inc.push_back((arrivetime + usehour) / 24);
-			strategy(pass, now_destion, passcity, tmp_route, old_route, mindanger, sumdanger, increment, (*begin_enable).d_time,go_day,go_inc);//递归算法
+			strategy(pass, now_destion, passcity, tmp_route, old_route, mindanger, sumdanger, increment, (*begin_enable).d_time);//递归算法
 
 			begin_enable++;
 		}
@@ -113,8 +98,6 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 			if (passcity.begin() != passcity.end()) passcity.pop_back();
 			sumdanger -= increment.back();
 			increment.pop_back();
-			go_day -= go_inc.back();
-			go_inc.pop_back();
 		}
 		enabletime.clear();
 	}
@@ -147,13 +130,18 @@ void limit_strategy(Passenger &pass, string start, vector<string> &passcity, lis
 		begin_passcity++;
 	}
 	if (start == pass.destination) {//到达终点，且风险比旧的最小风险低
-		mindanger = sumdanger;
 		tmp_path.location = start;
 		tmp_path.s_time = -1;//已经到达终点change_state函数不再改变状态
 		tmp_route.push_back(tmp_path);
 		old_route = tmp_route;
-		pass.plan.push_back(old_route) ;
+		if (sumdanger == mindanger)//如果新的路径风险于旧的相同，就添加
+			pass.plan.push_back(old_route);
+		else if (pass.plan.begin() == pass.plan.end())//否则就是比旧的风险小，就不添加而是置换,如果还没有路径就新增一个
+			pass.plan.push_back(old_route);
+		else
+			pass.plan[0] = old_route;
 
+		mindanger = sumdanger;
 		tmp_route.pop_back();//因为加了终点所以要多删一个点
 		tmp_route.pop_back();
 		tmp_route.pop_back();
@@ -228,10 +216,8 @@ void makepath() {
 		double sumdanger = 0;//计算的风险
 		vector<double> increment;//每次增加的风险
 		vector<string> passcity;//走过的城市防止环路
-		vector<int> go_inc;//每次增加的日数
-		int go_day = (*begin_pass).go_day + 1;
 		if ((*begin_pass).choice == 0) {//最少风险策略
-			strategy((*begin_pass), (*begin_pass).start, passcity, tmp_route, old_route, mindanger, sumdanger, increment, 0,go_day,go_inc);
+			strategy((*begin_pass), (*begin_pass).start, passcity, tmp_route, old_route, mindanger, sumdanger, increment, 0);
 			(*begin_pass).changestate();
 		}
 		else if ((*begin_pass).choice == 1) {//限时最少风险策略
