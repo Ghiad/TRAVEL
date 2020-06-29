@@ -114,30 +114,67 @@ void Diary::write(string name,string location,int w_time) {
 }
 void Passenger::changestate() {//每过一小时改变一下乘客状态
 	if (go_day < day) {//出发时间的第二天开始
-		if (plan.front().s_time != -1) {//没到达终点，就改变状态，到达后不改变状态
-			plan.front().s_time--;
-			if (plan.front().s_time == 0) {
-				plan.pop_front();
-				diary.write(name, plan.front().location, plan.front().s_time);
+		if (plan.front().front().s_time != -1) {//没到达终点，就改变状态，到达后不改变状态
+			plan.front().front().s_time--;
+			if (plan.front().front().s_time == 0) {
+				plan.front().pop_front();
+				diary.write(name, plan.front().front().location, plan.front().front().s_time);
 			}
 		}
 	}
 	
 }
 void Passenger::printstate() {
-	auto next_plan = plan.begin();
+	auto next_plan = (*plan.begin()).begin();
 	next_plan++;
 	if (go_day >= day) {
 		cout << "旅客 " << name << "\t还没到达出发时间，出发时间是第" << go_day + 1 << "天" << endl;
 	}
-	else if (plan.front().kind == "城市")//在城市
-		cout << "旅客 " << name << "\t现在在" << plan.front().location << "\t\t还要等待" << plan.front().s_time << "小时乘坐\t" << (*next_plan).location << endl;
-	else if (next_plan == plan.end())//到达终点
-		cout << "旅客 " << name << "\t现在到达终点\t\t" << plan.front().location << endl;
+	else if (plan.front().front().kind == "城市")//在城市
+		cout << "旅客 " << name << "\t现在在" << plan.front().front().location << "\t\t还要等待" << plan.front().front().s_time << "小时乘坐\t" << (*next_plan).location << endl;
+	else if (next_plan == plan.front().end())//到达终点
+		cout << "旅客 " << name << "\t现在到达终点\t\t" << plan.front().front().location << endl;
 	else//在车上
-		cout << "旅客 " << name << "\t现在在乘坐" << plan.front().kind<< plan.front().location << "\t还要" << plan.front().s_time << "小时到达\t\t" <<(*next_plan).location  << endl;
+		cout << "旅客 " << name << "\t现在在乘坐" << plan.front().front().kind<< plan.front().front().location << "\t还要" << plan.front().front().s_time << "小时到达\t\t" <<(*next_plan).location  << endl;
 }
 
+void Passenger::printroute() {
+	auto begin_itr = plan.begin(), end_itr = plan.end();
+	while (begin_itr != end_itr) {
+		auto route_beg = (*begin_itr).begin(), route_end = (*begin_itr).end();
+		(*route_beg).arriveday = go_day + 1;
+		(*route_beg).arrivetime = 0;
+		while (route_beg != route_end) {
+			auto tmp = route_beg;
+			route_beg++;//这个时候一定是乘坐车辆
+			if (route_beg != route_end) {
+				int usetime = (*route_beg).s_time;
+				route_beg++;//这个时候在城市里
+				(*route_beg).arriveday=(*tmp).arriveday+((*tmp).arrivetime + usetime+(*tmp).s_time)/24;
+				(*route_beg).arrivetime = ((*tmp).arrivetime + usetime+(*tmp).s_time) % 24;
+			}
+		}
+		begin_itr++;
+	}
+	begin_itr = plan.begin();
+	while (begin_itr != end_itr) {
+		auto route_beg = (*begin_itr).begin(),route_end= (*begin_itr).end();
+		cout << "旅客 " << name << endl << "第" << go_day + 1 << "天" << (*route_beg).s_time << "点" << "从" << (*route_beg).location << "出发" << endl;
+		while (route_beg != route_end) {
+			route_beg++;
+			if (route_beg != route_end) {
+				auto tmp = route_beg;
+				tmp++;
+				if ((*route_beg).kind == "城市"&&tmp != route_end)
+					cout << "第" << (*route_beg).arriveday << "天" << (*route_beg).arrivetime << "点到达" << (*route_beg).location << "再过" << (*route_beg).s_time << "小时出发" << endl;
+				else if (tmp == route_end)
+					cout << "第" << (*route_beg).arriveday << "天" << (*route_beg).arrivetime << "点到达终点" << (*route_beg).location << endl << endl;
+			}
+		}
+		begin_itr++;
+	}
+	
+}
 void inquire() {//查询操作
 	auto begin_pass = passenger.begin(), end_pass = passenger.end();
 	cout << "现在是第" << day << "天" << hour<<"点"<< endl;
@@ -224,18 +261,18 @@ void start() {
 	auto begin_pass = passenger.begin(), end_pass = passenger.end();
 	while (true) {
 		if (tmp_hour != hour) {//每过1小时
+			inquire();
 			while (begin_pass != end_pass) {
 				(*begin_pass).changestate();
 				begin_pass++;
 			}
-			tmp_hour = hour;
-			inquire();
+			tmp_hour = hour;	
 		}
 		begin_pass = passenger.begin();//恢复迭代器到容器首位
 		end_pass = passenger.end();
 		int i = 0;
 		while (begin_pass != end_pass) {
-			if ((*begin_pass).plan.front().s_time == -1) i++;
+			if ((*begin_pass).plan.front().front().s_time == -1) i++;
 			if (i == passenger.size()) return;//所有乘客到达终点
 			begin_pass++;
 		}
