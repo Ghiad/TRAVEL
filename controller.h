@@ -22,6 +22,8 @@ extern int stop;
 typedef struct path {
 	string kind;
 	string location;//目前地
+	int arrivetime;//到达该点的时间
+	int arriveday;
 	int s_time;//花费时间
 }Path;
 
@@ -49,6 +51,7 @@ public:
 	Passenger(string, string, string,int,int,int,int);
 	void changestate();//改变当前状态
 	void printstate();//输出当前状态
+	void printroute();//输出路径
 	string name;//乘客名字
 	string start;//乘客最开始的地方
 	string destination;//乘客目的地
@@ -56,7 +59,7 @@ public:
 	int go_hour;//乘客出发小时
 	int choice;//选择的风险策略
 	int limit;//限制的时间
-	list<Path> plan;//乘客的旅行计划表
+	vector<list<Path>> plan;//乘客的旅行计划表
 };
 class Diary {
 public:
