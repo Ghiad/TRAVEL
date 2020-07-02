@@ -1,12 +1,13 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #include"pch.h"
+#include"my_vector.h"
+#include<list>
 #include <iostream>
 #include<thread>
 #include<time.h>
 #include<string>
-#include<vector>
-#include<list>
+
 #include<deque>
 #include<fstream>
 #include<stdio.h>
@@ -29,12 +30,14 @@ typedef struct path {
 
 class City {
 public:
+	City() = default;
 	City(string, double);
 	string city_name;//城市名
 	double danger;//城市风险等级	
 };
 class Timetable {
 public:
+	Timetable() = default;
 	Timetable(string, string, string, string, int, int, int,int);
 	string v_name;//班次
 	string kind;//交通工具种类
@@ -48,6 +51,7 @@ public:
 
 class Passenger {
 public:
+	Passenger() = default;
 	Passenger(string, string, string,int,int,int,int);
 	void changestate();//改变当前状态
 	void printstate();//输出当前状态
@@ -59,18 +63,18 @@ public:
 	int go_hour;//乘客出发小时
 	int choice;//选择的风险策略
 	int limit;//限制的时间
-	vector<list<Path>> plan;//乘客的旅行计划表
+	my_vector<list<Path>> plan;//乘客的旅行计划表
 };
 class Diary {
 public:
 	void write();
 	void write(string,string,int);
 private:
-	vector<string> change;//输入的命令和乘客状态的变化
+	my_vector<string> change;//输入的命令和乘客状态的变化
 };
-extern vector<City> city;//城市动态数组
-extern vector<Timetable> timetable;
-extern vector<Passenger> passenger;
+extern my_vector<City> city;//城市动态数组
+extern my_vector<Timetable> timetable;
+extern my_vector<Passenger> passenger;
 extern Diary diary;//全局日志文件
 extern void start();//模拟开始
 extern void counter();//计时器函数
