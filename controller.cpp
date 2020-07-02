@@ -133,27 +133,27 @@ void Passenger::printstate() {
 		cout << "旅客 " << name << "\t还没到达出发时间，出发时间是第" << go_day + 1 << "天" << endl;
 	}
 	else if (plan.front().front().kind == "城市")//在城市
-		cout << "旅客 " << name << "\t现在在" << plan.front().front().location << "\t\t还要等待" << plan.front().front().s_time << "小时乘坐\t" << (*next_plan).object.location << endl;
+		cout << "旅客 " << name << "\t现在在" << plan.front().front().location << "\t\t还要等待" << plan.front().front().s_time << "小时乘坐\t" << (*next_plan).location << endl;
 	else if (next_plan == plan.front().end())//到达终点
 		cout << "旅客 " << name << "\t现在到达终点\t\t" << plan.front().front().location << endl;
 	else//在车上
-		cout << "旅客 " << name << "\t现在在乘坐" << plan.front().front().kind<< plan.front().front().location << "\t还要" << plan.front().front().s_time << "小时到达\t\t" <<(*next_plan).object.location  << endl;
+		cout << "旅客 " << name << "\t现在在乘坐" << plan.front().front().kind<< plan.front().front().location << "\t还要" << plan.front().front().s_time << "小时到达\t\t" <<(*next_plan).location  << endl;
 }
 
 void Passenger::printroute() {
 	auto begin_itr = plan.begin(), end_itr = plan.end();
 	while (begin_itr != end_itr) {
 		auto route_beg = (*begin_itr).begin(), route_end = (*begin_itr).end();
-		(*route_beg).object.arriveday = go_day + 1;
-		(*route_beg).object.arrivetime = 0;
+		(*route_beg).arriveday = go_day + 1;
+		(*route_beg).arrivetime = 0;
 		while (route_beg != route_end) {
 			auto tmp = route_beg;
 			route_beg++;//这个时候一定是乘坐车辆
 			if (route_beg != route_end) {
-				int usetime = (*route_beg).object.s_time;
+				int usetime = (*route_beg).s_time;
 				route_beg++;//这个时候在城市里
-				(*route_beg).object.arriveday=(*tmp).object.arriveday+((*tmp).object.arrivetime + usetime+(*tmp).object.s_time)/24;
-				(*route_beg).object.arrivetime = ((*tmp).object.arrivetime + usetime+(*tmp).object.s_time) % 24;
+				(*route_beg).arriveday=(*tmp).arriveday+((*tmp).arrivetime + usetime+(*tmp).s_time)/24;
+				(*route_beg).arrivetime = ((*tmp).arrivetime + usetime+(*tmp).s_time) % 24;
 			}
 		}
 		begin_itr++;
@@ -161,16 +161,16 @@ void Passenger::printroute() {
 	begin_itr = plan.begin();
 	while (begin_itr != end_itr) {
 		auto route_beg = (*begin_itr).begin(),route_end= (*begin_itr).end();
-		cout << "旅客 " << name << endl << "第" << go_day + 1 << "天" << (*route_beg).object.s_time << "点" << "从" << (*route_beg).object.location << "出发" << endl;
+		cout << "旅客 " << name << endl << "第" << go_day + 1 << "天" << (*route_beg).s_time << "点" << "从" << (*route_beg).location << "出发" << endl;
 		while (route_beg != route_end) {
 			route_beg++;
 			if (route_beg != route_end) {
 				auto tmp = route_beg;
 				tmp++;
-				if ((*route_beg).object.kind == "城市"&&tmp != route_end)
-					cout << "第" << (*route_beg).object.arriveday << "天" << (*route_beg).object.arrivetime << "点到达" << (*route_beg).object.location << "再过" << (*route_beg).object.s_time << "小时出发" << endl;
+				if ((*route_beg).kind == "城市"&&tmp != route_end)
+					cout << "第" << (*route_beg).arriveday << "天" << (*route_beg).arrivetime << "点到达" << (*route_beg).location << "再过" << (*route_beg).s_time << "小时出发" << endl;
 				else if (tmp == route_end)
-					cout << "第" << (*route_beg).object.arriveday << "天" << (*route_beg).object.arrivetime << "点到达终点" << (*route_beg).object.location << endl << endl;
+					cout << "第" << (*route_beg).arriveday << "天" << (*route_beg).arrivetime << "点到达终点" << (*route_beg).location << endl << endl;
 			}
 		}
 		begin_itr++;
