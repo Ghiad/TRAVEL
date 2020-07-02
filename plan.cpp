@@ -3,7 +3,7 @@
 #include"controller.h"
 using namespace std;
 
-void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path> &tmp_route,  double &mindanger, double &sumdanger, vector<double> &increment, int arrivetime, int limit, int choice) {//最少风险策略
+void strategy(Passenger &pass, string start, my_vector<string> &passcity, list<Path> &tmp_route,  double &mindanger, double &sumdanger, my_vector<double> &increment, int arrivetime, int limit, int choice) {//最少风险策略
 	auto begin_passcity = passcity.begin(), end_passcity = passcity.end();//passcity的迭代器
 	Path tmp_path;//暂时存储路线
 	if (sumdanger > mindanger) {//如果风险已经超出最小的，舍去
@@ -21,12 +21,14 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 		return;
 	}
 	while (begin_passcity != end_passcity) {
-		if (start == (*begin_passcity)) {//环路出现,舍去,不应该在这舍去
-			tmp_route.pop_back();
-			tmp_route.pop_back();
-			sumdanger -= increment.back();
-			increment.pop_back();
-			return;
+		if (begin_passcity != nullptr) {
+			if (start == (*begin_passcity)) {//环路出现,舍去,不应该在这舍去
+				tmp_route.pop_back();
+				tmp_route.pop_back();
+				sumdanger -= increment.back();
+				increment.pop_back();
+				return;
+			}
 		}
 		begin_passcity++;
 	}
@@ -51,7 +53,7 @@ void strategy(Passenger &pass, string start, vector<string> &passcity, list<Path
 	else {
 		passcity.push_back(start);//把当前城市加入到已经走过的城市中,防止环路
 		auto begin_time = timetable.begin(), end_time = timetable.end();
-		vector<Timetable> enabletime;//从该城市出发的班次
+		my_vector<Timetable> enabletime;//从该城市出发的班次
 		while (begin_time != end_time) {//寻找所以出发点在目前地方且出发时机在到达时间之后的班次
 			if ((*begin_time).start == start) {
 				enabletime.push_back((*begin_time));
@@ -114,8 +116,8 @@ void makepath() {
 		list<Path> tmp_route;
 		double mindanger = MAX_DANGER;//最小的风险
 		double sumdanger = 0;//计算的风险
-		vector<double> increment;//每次增加的风险
-		vector<string> passcity;//走过的城市防止环路
+		my_vector<double> increment;//每次增加的风险
+		my_vector<string> passcity;//走过的城市防止环路
 		strategy((*begin_pass), (*begin_pass).start, passcity, tmp_route,  mindanger, sumdanger, increment, 0, (*begin_pass).limit, (*begin_pass).choice);
 		(*begin_pass).changestate();
 		begin_pass++;
